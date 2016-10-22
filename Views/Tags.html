@@ -1,0 +1,23 @@
+{% extends "Main.html" %}
+{% block content %}
+  <div class="container">
+    <h1>Resultados de {{Saludo}}</h1>
+    <div class="table-responsive">
+      <table class="table table-bordered table-hover table-condensed">
+        <tr class="active">
+          <th>Pregunta</th>
+          <th>Descripcion</th>
+          <th>Fecha de publicacion</th>
+        </tr>
+        {% for row in Preguntas %}
+        <tr>
+          <td>{{row.q}}</td>
+          <td>{{row.d}}</td>
+          <td>{{row.dateT}}</td>
+        </tr>
+        {% endfor %}
+      </table>
+
+    </div>
+  </div>
+{% endblock %}

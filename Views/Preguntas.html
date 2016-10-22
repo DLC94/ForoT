@@ -1,0 +1,94 @@
+{% extends "Main.html" %}
+{% block content %}
+  <div class="container">
+    <div>
+      <div class="form-group">
+        <label for="question">Pregunta</label>
+        <div class="row">
+          <div class="col-md-12">
+            <input type="text" class="form-control" id="question" placeholder="Titulo de la pregunta" name="question">
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="description">Descripcion</label>
+        <div class="row">
+          <div class="col-md-12">
+            <textarea style="resize:vertical" name="description" id="description" cols="30" rows="10" placeholder="Descripcion" class="form-control"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="select2">Tags</label>
+        <div class="row">
+          <div class="col-md-12">
+            <select id="select2" style="width:100%%" multiple="true" class="select2" value="que raio"></select>
+          </div>
+        </div>
+      </div>
+
+      <button id="btn" class="btn btn-default">Subir</button>
+    </div>
+
+  </div>
+
+  <script>
+  //OBTIENE DATOS DE TABLA TAG Y LOS ADJUNTA A SELECT, PONER EN ARCHIVO EN STATIC/JS
+    $.ajax({
+      method: "PUT",//VER SI SE PUEDE HACER POR OTRO METODO
+      url: "/pregunta",
+      dataType: 'json',
+      success: function(data){
+        for(var i=0 ; i < data.tag.length;i++){
+            $("#select2").append("<option value='"+data.tag[i]+"'>"+data.tag[i]+"</option>")
+        }
+      },
+      error: function(data){
+        alert("Ya valiste valedor")
+      }
+    })
+  </script>
+  <script>
+
+      var data;
+      var inputName;
+      var des;
+
+      //FUNCION DE SELECT2 QUE PERMITE USAR TAG y PERMITE SEPARARLOS POR , o espacios
+      $(function(){
+        $(".select2").select2({
+          tags:true,
+          theme: "classic",
+          tokenSeparators: [',', ' ']
+        });
+      });
+      //ENVIO DATOS DE FORMULARIO A BASE DE DATOS, PONER EN ARCHIVO DIFERENTE
+      $(document).ready(function(){
+        $("#btn").click(function(){
+          inputName = $("#question").val();
+          des = $("#description").val();
+          data = $("#select2").val();
+
+          $.ajax({
+            url: "/pregunta",
+            data: {
+              tag: data.toString(),
+              question: inputName,
+              description : des
+            },
+            success: function(s){
+              //alert("Mensaje recibido"+ s.message)
+              location.href="/tuspreguntas";
+            },
+            error: function(e){
+              alert("Error:" + e.message)
+            },
+            dataType: 'json',
+            method: 'POST'
+          })
+        })
+      })
+  </script>
+{% endblock %}

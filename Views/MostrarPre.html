@@ -1,0 +1,79 @@
+{% extends "Main.html" %}
+{% block content %}
+    <div class="container" id="pregunta">
+      <div class="modal fade bs-example-modal-lg" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    	  <div class="modal-dialog modal-lg" role="document">
+    	    <div class="modal-content">
+    	      <div class="modal-header">
+    	        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+    	        <h4 class="modal-title" id="myModalLabel"></h4>
+    	      </div>
+    	      <div class="modal-body" id="contenido">
+    	      </div>
+    	      <div class="modal-footer">
+    	        <button type="button" class="btn btn-default" data-dismiss="modal">Cerrar</button>
+    	      </div>
+    	    </div>
+    	  </div>
+    	</div>
+    </div>
+    <script>
+    //PONER SCRIPT EN ARCHIVO JS EN STATIC/JS
+     /*function avisa(valor){
+        console.log("Esto es una prueba" + valor)
+      }*/
+      function enviaDatosModal(titulo,descripcion,fecha,tags){
+        $("#myModalLabel").empty()
+        $("#contenido").empty()
+        $("#myModalLabel").append(titulo)
+        $("#contenido").append(descripcion)
+        var array = tags.split(',')
+        $("#contenido").append("<br><br><br>")
+        for (var i = 0; i < array.length; i++) {
+          $("#contenido").append("<button class='btn btn-primary btn-xs' onclick=avisa('"+array[i]+"')>"+array[i]+"</button>")
+        }
+        $("#contenido").append("<br><small>"+fecha+"</small>")
+      }
+      //AJAX PARA OBTENER LOS DATOS DE LA BASE DE DATOS Y MOSTRARLOS EN VISTA
+      $.ajax({
+        method:"POST",
+        url:"/tuspreguntas",
+        dataType:'json',
+        success: function(data){
+          for(var i = 0;i<data.Q.length;i++){
+            var titulo = String(data.Q[i]);
+            var descripcion = data.D[i].toString();
+            var descripcion_sinSalto = descripcion.split("\n").join(" ")
+            var fecha = data.dateT[i];
+            var tags = [];
+
+            for (var j = 0; j < data.tag[i].length; j++) {
+              tags.push(data.tag[i][j])
+            }
+            console.log(tags)
+            $("#pregunta").append(
+              "<section class='row'>"+
+                "<div class='col-xs-12 col-md-9 col-sm-8 vcenter'>"+
+                  "<h2>"+data.Q[i]+"</h2>"+
+                "</div>"+
+                "<div class='col-xs-12 col-md-3  col-sm-4 vcenter'>"+
+                  "<button onClick=\"enviaDatosModal('"+titulo+"','"+descripcion_sinSalto+"','"+fecha+"','"+tags+"')\" type='button' class='btn btn-success btn-lg center-block' data-toggle='modal' data-target='#myModal'>"+
+                    "<span class='caret'></span> Ver Mas</button>"+
+                "</div>"+
+              "</section>");
+
+            $("#pregunta").append("<hr>")
+
+          }
+        },
+        error: function(data){
+          alert("Ya valiste valedor")
+        }
+      })
+      function avisa(tag){
+        var url="/tag";
+        window.location=url+"?TagSeleccionado="+tag;
+      }
+
+    </script>
+{% endblock %}
