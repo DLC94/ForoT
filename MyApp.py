@@ -5,11 +5,12 @@ from Handlers.PreguntaHandler import QuestionHandler as QH
 from Handlers.MostrarHandler import MostrarQ as MQ
 from Handlers.MainPage import PaginaPrincipal as MP
 from Handlers.TagHandler import TControlle as TC
-
+from Handlers.ComentariosHandler import ComenController
 
 app = webapp2.WSGIApplication([
     ('/',MP),
     ('/pregunta',QH),
     ('/tuspreguntas',MQ),
-    ('/tag',TC)
+    ('/tag',TC),
+    ('/comentarios',ComenController),
 ],debug = True)

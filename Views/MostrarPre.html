@@ -8,7 +8,19 @@
     	        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
     	        <h4 class="modal-title" id="myModalLabel"></h4>
     	      </div>
-    	      <div class="modal-body" id="contenido">
+    	      <div class="modal-body">
+              <div id="contenido">
+
+              </div>
+            </div>
+            <div class="modal-body">
+              <div class="form-group">
+                <!--<label for="mensaje">Comentario: </label>-->
+                <textarea name="mensaje" rows="8" cols="40" class="form-control estilotextarea" id="mensaje" placeholder="Agrega un comentario..."></textarea>
+              </div>
+              <div class="comentarios">
+
+              </div>
     	      </div>
     	      <div class="modal-footer">
     	        <button type="button" class="btn btn-default" data-dismiss="modal">Cerrar</button>
@@ -22,9 +34,11 @@
      /*function avisa(valor){
         console.log("Esto es una prueba" + valor)
       }*/
-      function enviaDatosModal(titulo,descripcion,fecha,tags){
+
+      function enviaDatosModal(titulo,descripcion,fecha,tags,llave){
         $("#myModalLabel").empty()
         $("#contenido").empty()
+        $(".comentarios").empty()
         $("#myModalLabel").append(titulo)
         $("#contenido").append(descripcion)
         var array = tags.split(',')
@@ -33,7 +47,11 @@
           $("#contenido").append("<button class='btn btn-primary btn-xs' onclick=avisa('"+array[i]+"')>"+array[i]+"</button>")
         }
         $("#contenido").append("<br><small>"+fecha+"</small>")
+        isEnter(llave)
+
+        //aqui recibo todas los comentarios y los agrego
       }
+
       //AJAX PARA OBTENER LOS DATOS DE LA BASE DE DATOS Y MOSTRARLOS EN VISTA
       $.ajax({
         method:"POST",
@@ -46,18 +64,18 @@
             var descripcion_sinSalto = descripcion.split("\n").join(" ")
             var fecha = data.dateT[i];
             var tags = [];
+            var llave = data.key[i]
 
             for (var j = 0; j < data.tag[i].length; j++) {
               tags.push(data.tag[i][j])
             }
-            console.log(tags)
             $("#pregunta").append(
               "<section class='row'>"+
                 "<div class='col-xs-12 col-md-9 col-sm-8 vcenter'>"+
                   "<h2>"+data.Q[i]+"</h2>"+
                 "</div>"+
                 "<div class='col-xs-12 col-md-3  col-sm-4 vcenter'>"+
-                  "<button onClick=\"enviaDatosModal('"+titulo+"','"+descripcion_sinSalto+"','"+fecha+"','"+tags+"')\" type='button' class='btn btn-success btn-lg center-block' data-toggle='modal' data-target='#myModal'>"+
+                  "<button onClick=\"enviaDatosModal('"+titulo+"','"+descripcion_sinSalto+"','"+fecha+"','"+tags+"','"+llave+"')\" type='button' class='btn btn-success btn-lg center-block' data-toggle='modal' data-target='#myModal'>"+
                     "<span class='caret'></span> Ver Mas</button>"+
                 "</div>"+
               "</section>");
@@ -74,6 +92,43 @@
         var url="/tag";
         window.location=url+"?TagSeleccionado="+tag;
       }
-
+      function isEnter(llave){
+        $("#mensaje").keypress(function(e){
+          var msg = $("#mensaje").val()
+          if($.trim(msg)){
+            if(e.which == 13 && !e.shiftKey){
+            //if(e.keyCode == 13 && !e.shiftKey){
+              //alert($("#mensaje").val());
+              $("#mensaje").val("");
+              e.preventDefault()
+              $(".comentarios").append("<hr>");
+              $(".comentarios").append("<h3>Anonimo dice:</h3>");
+              $(".comentarios").append("<p>"+msg+"</p>");
+              $.ajax({
+                method:"post",
+                data:{cmt:msg,clave:llave},
+                url:'/comentarios',
+                dataType: 'json',
+                success: function(data){console.log("bien")},
+                error: function(data){console.log("mal")}
+              })
+            }
+          }
+        })
+      }
+      //ESTO PODRIA SERVIR
+      //val().replace(/\n/g, '<br />')
+      /*
+      var comentario = $("#comentarios").val();
+      $.ajax({
+        method:"POST",
+        data:{cmt:comentario,clave:llave},
+        url:"Models/ComentariosHandler.py",
+        dataType: 'json',
+        success: function(data){},
+        error: function(data){}
+      })
+      */
     </script>
+
 {% endblock %}
