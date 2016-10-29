@@ -16,7 +16,7 @@
             <div class="modal-body">
               <div class="form-group">
                 <!--<label for="mensaje">Comentario: </label>-->
-                <textarea name="mensaje" rows="8" cols="40" class="form-control estilotextarea" id="mensaje" placeholder="Agrega un comentario..."></textarea>
+                <textarea data='' name="mensaje" rows="8" cols="40" class="form-control estilotextarea" id="mensaje" placeholder="Agrega un comentario..."></textarea>
               </div>
               <div class="comentarios">
 
@@ -34,8 +34,8 @@
      /*function avisa(valor){
         console.log("Esto es una prueba" + valor)
       }*/
-
-      function enviaDatosModal(titulo,descripcion,fecha,tags,llave){
+    /*  function enviaDatosModal(titulo,descripcion,fecha,tags,llaves){
+        $("#mensaje").val("");
         $("#myModalLabel").empty()
         $("#contenido").empty()
         $(".comentarios").empty()
@@ -47,9 +47,31 @@
           $("#contenido").append("<button class='btn btn-primary btn-xs' onclick=avisa('"+array[i]+"')>"+array[i]+"</button>")
         }
         $("#contenido").append("<br><small>"+fecha+"</small>")
-        isEnter(llave)
-
+        console.log(llaves)
+        buscaComentarios()
         //aqui recibo todas los comentarios y los agrego
+      }*/
+      var Diccionario={};
+      function buscaComentarios(llave){
+        console.log()
+        $.ajax({
+          method:"put",
+          url:'/comentarios',
+          dataType:'json',
+          data:{clave:llave},
+          success:function(data){
+            for(var i=0;i<data.C.length;i++){
+              var comentario = data.C[i];
+              //var fecha = data.dateT[i];
+              $(".comentarios").append("<hr>");
+              $(".comentarios").append("<h3>Anonimo dice:</h3>");
+              $(".comentarios").append("<p>"+comentario+"</p>");
+            }
+          },
+          error:function(data){
+            alert("No se pudo completar la accion");
+          }
+        });
       }
 
       //AJAX PARA OBTENER LOS DATOS DE LA BASE DE DATOS Y MOSTRARLOS EN VISTA
@@ -60,22 +82,23 @@
         success: function(data){
           for(var i = 0;i<data.Q.length;i++){
             var titulo = String(data.Q[i]);
+
             var descripcion = data.D[i].toString();
             var descripcion_sinSalto = descripcion.split("\n").join(" ")
             var fecha = data.dateT[i];
             var tags = [];
             var llave = data.key[i]
-
             for (var j = 0; j < data.tag[i].length; j++) {
               tags.push(data.tag[i][j])
             }
+            Diccionario[llave]={'fecha':fecha,'descripcion':descripcion_sinSalto,'titulo':titulo,'tags':tags };
             $("#pregunta").append(
               "<section class='row'>"+
                 "<div class='col-xs-12 col-md-9 col-sm-8 vcenter'>"+
                   "<h2>"+data.Q[i]+"</h2>"+
                 "</div>"+
                 "<div class='col-xs-12 col-md-3  col-sm-4 vcenter'>"+
-                  "<button onClick=\"enviaDatosModal('"+titulo+"','"+descripcion_sinSalto+"','"+fecha+"','"+tags+"','"+llave+"')\" type='button' class='btn btn-success btn-lg center-block' data-toggle='modal' data-target='#myModal'>"+
+                  "<button id=\""+llave+"\"  type='button' class='btn btn-success btn-lg center-block pregunta' data-toggle='modal' data-target='#myModal'>"+
                     "<span class='caret'></span> Ver Mas</button>"+
                 "</div>"+
               "</section>");
@@ -92,30 +115,7 @@
         var url="/tag";
         window.location=url+"?TagSeleccionado="+tag;
       }
-      function isEnter(llave){
-        $("#mensaje").keypress(function(e){
-          var msg = $("#mensaje").val()
-          if($.trim(msg)){
-            if(e.which == 13 && !e.shiftKey){
-            //if(e.keyCode == 13 && !e.shiftKey){
-              //alert($("#mensaje").val());
-              $("#mensaje").val("");
-              e.preventDefault()
-              $(".comentarios").append("<hr>");
-              $(".comentarios").append("<h3>Anonimo dice:</h3>");
-              $(".comentarios").append("<p>"+msg+"</p>");
-              $.ajax({
-                method:"post",
-                data:{cmt:msg,clave:llave},
-                url:'/comentarios',
-                dataType: 'json',
-                success: function(data){console.log("bien")},
-                error: function(data){console.log("mal")}
-              })
-            }
-          }
-        })
-      }
+
       //ESTO PODRIA SERVIR
       //val().replace(/\n/g, '<br />')
       /*
@@ -129,6 +129,51 @@
         error: function(data){}
       })
       */
+      $(document).ready(function(){
+        $("#mensaje").keypress(function(e){
+          var msg = $("#mensaje").val()
+          if($.trim(msg)){
+            if(e.which == 13 && !e.shiftKey){
+              var llave=$("#mensaje").attr("data");
+              $("#mensaje").val("");
+              e.preventDefault()
+              $(".comentarios").append("<hr>");
+              $(".comentarios").append("<h3>Anonimo dice:</h3>");
+              $(".comentarios").append("<p>"+msg+"</p>");
+              console.log(msg)
+              $.ajax({
+                method:"post",
+                data:{cmt:msg,clave:llave},
+                url:'/comentarios',
+                dataType: 'json',
+                success: function(data){console.log("bien")},
+                error: function(data){console.log("mal")}
+              })
+            }
+          }
+
+
+        });
+        $(".pregunta").click(function(){
+          var llave=$(this).attr("id");
+          console.log("ID"+llave);
+          $("#mensaje").val("");
+          $("#mensaje").attr("data",llave);
+          $("#myModalLabel").empty()
+          $("#contenido").empty()
+          $(".comentarios").empty()
+          $("#myModalLabel").append(Diccionario[llave].titulo)
+          $("#contenido").append(Diccionario[llave].descripcion)
+          var array = Diccionario[llave].tags;
+          $("#contenido").append("<br><br><br>")
+          for (var i = 0; i < array.length; i++) {
+            $("#contenido").append("<button class='btn btn-primary btn-xs' onclick=avisa('"+array[i]+"')>"+array[i]+"</button>")
+          }
+          $("#contenido").append("<br><small>"+Diccionario[llave].fecha+"</small>")
+          console.log(llave)
+          buscaComentarios(llave)
+        });
+})
     </script>
 
 {% endblock %}

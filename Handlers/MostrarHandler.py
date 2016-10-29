@@ -44,8 +44,7 @@ class MostrarQ(webapp2.RequestHandler):
                 for k in searchT:
                     tags_separados.append(k.tag)
             tags.append(tags_separados)
-            print "AQUIIIIIIIIII"
-            print llaves
+
         array = {
             'Q':preguntas,
             'D':descripciones,
@@ -59,8 +58,7 @@ class MostrarQ(webapp2.RequestHandler):
     def put(self):
         com = self.request.get('cmt',None)
         llave = self.request.get('clave',None)
-        print com
-        print llave
+
         #search = db.GqlQuery("SELECT * FROM Question")
         #for i in search:
         #    if llave == i.key().id():
