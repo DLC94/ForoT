@@ -7,18 +7,23 @@ from Models.Tag import Tag
 from Models.PreguntaTag import PreguntaTag
 import datetime
 from google.appengine.ext import db
+from Handlers.SesionBase import BaseHandler
 
 JINJA_ENVIRONMENT = jinja2.Environment(loader = jinja2.FileSystemLoader(os.path.dirname("Views/")))
 
-class MostrarQ(webapp2.RequestHandler):
+class MostrarQ(BaseHandler):
     template = JINJA_ENVIRONMENT.get_template('MostrarPre.html')
 
     def get(self):
-        template_var = {
-            'title': "Tus Preguntas",
-            'titleMenu': "Preguntas que haz realizado"
-        }
-        self.response.write(self.template.render(template_var))
+        username = self.session.get('username')
+        if username == None:
+            self.redirect('/login')
+        else:
+            template_var = {
+                'title': "Tus Preguntas",
+                'titleMenu': "Preguntas que haz realizado"
+            }
+            self.response.write(self.template.render(template_var))
 
     def post(self):
         preguntas = []
@@ -28,8 +33,12 @@ class MostrarQ(webapp2.RequestHandler):
         llaves = []
         idQuestion = None
         idT = None
+        username = self.session.get('username')
+        query = db.GqlQuery("SELECT * FROM Usuario WHERE username=:user",user=username)
+        k = query.get()
+        key = k.key()
 
-        searchQ = db.GqlQuery("SELECT * FROM Question order by date Desc",)#Busca todas preguntas
+        searchQ = db.GqlQuery("SELECT * FROM Question WHERE usuario=:user order by date Desc",user=key)#Busca todas preguntas
         for i in searchQ:
             #idQuestion = i.key().id()
             preguntas.append(i.question)
@@ -51,6 +60,7 @@ class MostrarQ(webapp2.RequestHandler):
             'tag':tags,
             'dateT':dateTime,
             'key':llaves,
+            'user': username,
             'error':"Ya valiste valedor"
         }
         self.response.out.write(json.dumps(array))

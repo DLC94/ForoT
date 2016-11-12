@@ -7,6 +7,7 @@ from Models.Tag import Tag
 from Models.PreguntaTag import PreguntaTag as PTAG
 from google.appengine.ext import db
 import datetime
+from Handlers.SesionBase import BaseHandler
 
 JINJA_ENVIROMENT = jinja2.Environment(loader = jinja2.FileSystemLoader(os.path.dirname('Views/')))
 
@@ -18,14 +19,18 @@ def esta_repetido(strQuery,elemento):
     return False
 
 
-class QuestionHandler(webapp2.RequestHandler):
+class QuestionHandler(BaseHandler):
     template = JINJA_ENVIROMENT.get_template('Preguntas.html')
     def get(self):
-        template_vars = {
-            'title': "Subir Pregunta",
-            'titleMenu': "Sube una Pregunta"
-        }
-        self.response.write(self.template.render(template_vars))
+        username = self.session.get('username')
+        if username == None:
+            self.redirect('/login')
+        else:
+            template_vars = {
+                'title': "Subir Pregunta",
+                'titleMenu': "Sube una Pregunta"
+            }
+            self.response.write(self.template.render(template_vars))
 
 
     def post(self):
@@ -33,12 +38,16 @@ class QuestionHandler(webapp2.RequestHandler):
         description = self.request.get("description",None)
         msj = self.request.get_all("tag",None)
         date_now = datetime.datetime.now()
+        username = self.session.get('username')
 
+        query = db.GqlQuery("SELECT * FROM Usuario WHERE username=:user",user=username)
+        k = query.get()
+        key = k.key()
 
-        q = Question(question = titulo,description = description,date = date_now)
+        q = Question(question = titulo,description = description,date = date_now, usuario = key, respuesta = False)
         q.put()
         q.put()
-        
+
         lista = msj[0].split(',')
         for i in lista:
             if esta_repetido("SELECT * FROM Tag",i):

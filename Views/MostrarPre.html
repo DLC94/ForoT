@@ -1,4 +1,4 @@
-{% extends "Main.html" %}
+{% extends "MainLogin.html" %}
 {% block content %}
     <div class="container" id="pregunta">
       <div class="modal fade bs-example-modal-lg" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
@@ -17,6 +17,9 @@
               <div class="form-group">
                 <!--<label for="mensaje">Comentario: </label>-->
                 <textarea data='' name="mensaje" rows="8" cols="40" class="form-control estilotextarea" id="mensaje" placeholder="Agrega un comentario..."></textarea>
+              </div>
+              <div id="best-comment">
+
               </div>
               <div class="comentarios">
 
@@ -37,7 +40,7 @@
 	        dataType:'json',
 	        success: function(data){
             //Poner todo esto en un metodo, y llamarlo aqui
-	        	console.log("Entontre todo")
+  	        var user = data.user;
 	          for(var i = 0;i<data.Q.length;i++){
 	            var titulo = String(data.Q[i]);
 
@@ -49,7 +52,7 @@
 	            for (var j = 0; j < data.tag[i].length; j++) {
 	              tags.push(data.tag[i][j]);
 	            }
-	            Diccionario[llave]={'fecha':fecha,'descripcion':descripcion_sinSalto,'titulo':titulo,'tags':tags };
+	            Diccionario[llave]={'fecha':fecha,'descripcion':descripcion_sinSalto,'titulo':titulo,'tags':tags,'user':user };
 	            $("#pregunta").append(
 	              "<section class='row'>"+
 	                "<div class='col-xs-12 col-md-9 col-sm-8 vcenter'>"+
@@ -64,9 +67,7 @@
 	            $("#pregunta").append("<hr>")
 
 	          }
-	          console.log("cargar preguntas listo");
 	          $(document).ready(function(){
-    			console.log("Ahora hare esto")
 		        $("#mensaje").keypress(function(e){
 		          var msg = $("#mensaje").val()
 		          if($.trim(msg)){
@@ -74,10 +75,13 @@
 		              var llave=$("#mensaje").attr("data");
 		              $("#mensaje").val("");
 		              e.preventDefault()
+
 		              $(".comentarios").append("<hr>");
 		              $(".comentarios").append("<h3>Anonimo dice:</h3>");
 		              $(".comentarios").append("<p>"+msg+"</p>");
-		              console.log(msg)
+                  //hacer que envie primero ajax y si lo hace bien que regrese el id de la pregunta recien ingresada
+                  $(".comentarios").append("<button class='btn btn-success'><h6>Marca Como Correcta</h6></button>");
+
 		              $.ajax({
 		                method:"post",
 		                data:{cmt:msg,clave:llave},
@@ -98,7 +102,7 @@
 		          $("#myModalLabel").empty()
 		          $("#contenido").empty()
 		          $(".comentarios").empty()
-		          $("#myModalLabel").append(Diccionario[llave].titulo)
+		          $("#myModalLabel").append(Diccionario[llave].titulo+"<h6 style='margin:0px'>Publicado por "+Diccionario[llave].user+"</h6>")
 		          $("#contenido").append(Diccionario[llave].descripcion)
 		          var array = Diccionario[llave].tags;
 		          $("#contenido").append("<br><br><br>")
@@ -121,21 +125,53 @@
 
 
      function buscaComentarios(llave){
-        console.log(llave)
         $.ajax({
           method:"put",
           url:'/comentarios',
           dataType:'json',
           data:{clave:llave},
           success:function(data){
+            for(var j=0;j<data.BC.length;j++){
+              var bcomentario = data.BC[j];
+
+              $(".comentarios").append("<hr>");
+              $(".comentarios").append("<h3>Anonimo dice:</h3>");
+              $(".comentarios").append("<p>"+bcomentario+"</p>");
+              //poner click para clase quitar que desmarque como correcta el comentario y sin responder la pregunta
+              $(".comentarios").append("<button class='btn btn-danger quitar' id="+data.BK[j]+"><h6>Desmarca Como Correcta</h6></button>");
+
+            }
             for(var i=0;i<data.C.length;i++){
               var comentario = data.C[i];
               //var fecha = data.dateT[i];
               $(".comentarios").append("<hr>");
               $(".comentarios").append("<h3>Anonimo dice:</h3>");
               $(".comentarios").append("<p>"+comentario+"</p>");
+              $(".comentarios").append("<button class='btn btn-success correcta' id="+data.LL[i]+"><h6>Marca Como Correcta</h6></button>");
             }
-
+            //falta poner esto en la otra parte donde pongo el comentario al ingresar enter o solo con poner al boton la clase correcta y el id
+            $(".correcta").click(function(){
+              var key = $(this).attr("id");
+              $.ajax({
+                method:'post',
+                url: '/cambia',
+                dataType:'json',
+                data:{idQ:llave,LL:key},
+                success:function(data){},
+                error:function(data){}
+              })
+            });
+            $(".quitar").click(function(){
+              var key = $(this).attr("id");
+              $.ajax({
+                method: 'put',
+                url: '/cambia',
+                dataType: 'json',
+                data:{idQ:llave,LL:key},
+                success: function(data){},
+                error: function(data){}
+              })
+            })
           },
           error:function(data){
             alert("No se pudo completar la accion");

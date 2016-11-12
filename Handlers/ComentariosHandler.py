@@ -6,24 +6,27 @@ import datetime
 from Models.Preguntas import Question
 from Models.Comentario import Comentario
 from google.appengine.ext import db
+from Handlers.SesionBase import BaseHandler
 
 JINJA_ENVIROMENT = jinja2.Environment(loader = jinja2.FileSystemLoader(os.path.dirname('Views/')))
 
-class ComenController(webapp2.RequestHandler):
-    template = JINJA_ENVIROMENT.get_template('Main.html')
+class ComenController(BaseHandler):
+    template = JINJA_ENVIROMENT.get_template('MainLogin.html')
 
     def get(self):
-        template_vars = {
-            'title': "Subir Pregunta",
-            'titleMenu': "Sube una Pregunta"
-        }
-        self.response.write(self.template.render(template_vars))
+        username = self.session.get('username')
+        if username == None:
+            self.redirect('/login')
+        else:
+            template_vars = {
+                'title': "Subir Pregunta",
+                'titleMenu': "Sube una Pregunta"
+            }
+            self.response.write(self.template.render(template_vars))
 
     def post(self):
         com = self.request.get('cmt',None)
         llave = self.request.get('clave',None)
-        print "Esto es prueba" + llave
-        print "Esot es el comentario" + com
         search = db.GqlQuery("SELECT * FROM Question")
         for i in search:
 
@@ -31,7 +34,7 @@ class ComenController(webapp2.RequestHandler):
                 idQ = i.key()
                 print i.question
                 date_now = datetime.datetime.now()
-                c = Comentario(cmt=com,fecha=date_now,pregunta=idQ)
+                c = Comentario(cmt=com,fecha=date_now,pregunta=idQ,correcta = False)
                 c.put()
                 c.put()
 
@@ -41,7 +44,11 @@ class ComenController(webapp2.RequestHandler):
         llave = self.request.get('clave',None)
         #print "Aqui esta la  llave: " + llave
         comentarios = []
+        llaves = []
         fechas = []
+        bestC = []
+        bestLL = []
+        bestF = []
 
         buscaKey = db.GqlQuery("SELECT * FROM Question")
         key = None
@@ -49,12 +56,19 @@ class ComenController(webapp2.RequestHandler):
             idP = str(i.key().id())
             if llave == idP:
                 key = i.key()
-        print key
-        for q in db.GqlQuery("SELECT * FROM Comentario WHERE pregunta=:llave",llave=key):
+        for q in db.GqlQuery("SELECT * FROM Comentario WHERE pregunta=:llave AND correcta=False order by fecha",llave=key):
             comentarios.append(q.cmt)
             fechas.append(q.fecha)
+            llaves.append(q.key().id())
+        for k in db.GqlQuery("SELECT * FROM Comentario WHERE pregunta=:llave AND correcta=True order by fecha",llave=key):
+            bestC.append(k.cmt)
+            bestF.append(k.fecha)
+            bestLL.append(k.key().id())
         array = {
             'C':comentarios,
+            'LL':llaves,
+            'BK':bestLL,
+            'BC':bestC
             #'dateT':fechas
         }
 

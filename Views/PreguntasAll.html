@@ -1,0 +1,158 @@
+{% extends "MainLogin.html" %}
+{% block content %}
+  <div class="container" id="preguntas">
+    <div class="modal fade bs-example-modal-lg" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+      <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" id="myModalLabel"></h4>
+          </div>
+          <div class="modal-body">
+            <div id="contenido">
+
+            </div>
+          </div>
+          <div class="modal-body">
+            <div class="form-group">
+              <!--<label for="mensaje">Comentario: </label>-->
+              <textarea data='' name="mensaje" rows="8" cols="40" class="form-control estilotextarea" id="mensaje" placeholder="Agrega un comentario..."></textarea>
+            </div>
+            <div id="best-comment">
+
+            </div>
+            <div class="comentarios">
+
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Cerrar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <script>
+  Diccionario = {};
+  $.ajax({
+    method:'post',
+    url:'/inicio',
+    dataType:'json',
+    success:function(data){
+      for(var i = 0;i<data.Q.length;i++){
+        var titulo = String(data.Q[i]);
+
+        var descripcion = data.D[i].toString();
+        var descripcion_sinSalto = descripcion.split("\n").join(" ");
+        var fecha = data.dateT[i];
+        var tags = [];
+        var llave = data.key[i];
+        for(var j = 0;j<data.tag[i].length;j++){
+          tags.push(data.tag[i][j]);
+        }
+        Diccionario[llave]={'fecha':fecha,'descripcion':descripcion_sinSalto,'titulo':titulo,'tags':tags};
+        $("#preguntas").append(
+          "<section class='row'>"+
+            "<div class='col-xs-12 col-md-9 col-sm-8 vcenter'>"+
+              "<h2>"+titulo+"</h2>"+
+            "</div>"+
+            "<div class='col-xs-12 col-md-3  col-sm-4 vcenter'>"+
+              "<button id="+llave+" class='btn btn-success btn-lg center-block pregunta' data-toggle='modal' data-target='#myModal'>"+
+                "<span class='caret'></span> Ver Mas</button>"+
+            "</div>"+
+          "</section>");
+
+        $("#preguntas").append("<hr>");
+
+      }
+
+      $(document).ready(function(){
+        //aqui falta keypress de id mensaje
+        $("#mensaje").keypress(function(e){
+          var msg = $("#mensaje").val()
+          if($.trim(msg)){
+            if(e.which == 13 && !e.shiftKey){
+              var llave=$("#mensaje").attr("data");
+              $("#mensaje").val("");
+              e.preventDefault()
+
+              $(".comentarios").append("<hr>");
+              $(".comentarios").append("<h3>Anonimo dice:</h3>");
+              $(".comentarios").append("<p>"+msg+"</p>");
+
+              $.ajax({
+                method:"post",
+                data:{cmt:msg,clave:llave},
+                url:'/comentarios',
+                dataType: 'json',
+                success: function(data){console.log("bien")},
+                error: function(data){console.log("mal")}
+              })
+            }
+          }
+        });
+
+        $(".pregunta").click(function(){
+           var llave=$(this).attr("id");
+           console.log("ID"+llave);
+           $("#mensaje").val("");
+           $("#mensaje").attr("data",llave);
+           $("#myModalLabel").empty()
+           $("#contenido").empty()
+           $(".comentarios").empty()
+           $("#myModalLabel").append(Diccionario[llave].titulo+"<h6 style='margin:0px'>Publicado por</h6>")
+           $("#contenido").append(Diccionario[llave].descripcion)
+           var array = Diccionario[llave].tags;
+           $("#contenido").append("<br><br><br>")
+           for (var i = 0; i < array.length; i++) {
+             $("#contenido").append("<button class='btn btn-primary btn-xs' onclick=avisa('"+array[i]+"')>"+array[i]+"</button>")
+           }
+           $("#contenido").append("<br><small>"+Diccionario[llave].fecha+"</small>")
+           console.log(llave)
+           buscaComentarios(llave)
+         });
+      })
+    },
+    error: function(data){
+      alert("nel perro");
+    }
+  })
+  </script>
+  <script>
+  function buscaComentarios(llave){
+     $.ajax({
+       method:"put",
+       url:'/comentarios',
+       dataType:'json',
+       data:{clave:llave},
+       success:function(data){
+         for(var j=0;j<data.BC.length;j++){
+           var bcomentario = data.BC[j];
+
+           $(".comentarios").append("<hr>");
+           $(".comentarios").append("<h3>Anonimo dice:</h3>");
+           $(".comentarios").append("<p>"+bcomentario+"</p>");
+
+         }
+         for(var i=0;i<data.C.length;i++){
+           var comentario = data.C[i];
+           //var fecha = data.dateT[i];
+           $(".comentarios").append("<hr>");
+           $(".comentarios").append("<h3>Anonimo dice:</h3>");
+           $(".comentarios").append("<p>"+comentario+"</p>");
+         }
+
+       },
+       error:function(data){
+         alert("No se pudo completar la accion");
+       }
+     });
+   }
+
+   function avisa(tag){
+     var url="/tag";
+     window.location=url+"?TagSeleccionado="+tag;
+   }
+  </script>
+{% endblock %}
