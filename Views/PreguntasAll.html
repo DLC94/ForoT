@@ -35,11 +35,14 @@
   </div>
   <script>
   Diccionario = {};
+  var Usuario = null;
   $.ajax({
     method:'post',
     url:'/inicio',
     dataType:'json',
     success:function(data){
+      console.log(data.tag)
+      Usuario = data.usuario;
       for(var i = 0;i<data.Q.length;i++){
         var titulo = String(data.Q[i]);
 
@@ -48,10 +51,12 @@
         var fecha = data.dateT[i];
         var tags = [];
         var llave = data.key[i];
+        var user = data.user[i];
         for(var j = 0;j<data.tag[i].length;j++){
           tags.push(data.tag[i][j]);
         }
-        Diccionario[llave]={'fecha':fecha,'descripcion':descripcion_sinSalto,'titulo':titulo,'tags':tags};
+        Diccionario[llave]={'fecha':fecha,'descripcion':descripcion_sinSalto,'titulo':titulo,'tags':tags,'user':user};
+        console.log("Pregunta " + titulo + ", Tag: " + tags)
         $("#preguntas").append(
           "<section class='row'>"+
             "<div class='col-xs-12 col-md-9 col-sm-8 vcenter'>"+
@@ -78,12 +83,12 @@
               e.preventDefault()
 
               $(".comentarios").append("<hr>");
-              $(".comentarios").append("<h3>Anonimo dice:</h3>");
+              $(".comentarios").append("<h3>"+Usuario+" dice:</h3>");
               $(".comentarios").append("<p>"+msg+"</p>");
 
               $.ajax({
                 method:"post",
-                data:{cmt:msg,clave:llave},
+                data:{cmt:msg,clave:llave,user:Usuario},
                 url:'/comentarios',
                 dataType: 'json',
                 success: function(data){console.log("bien")},
@@ -101,7 +106,7 @@
            $("#myModalLabel").empty()
            $("#contenido").empty()
            $(".comentarios").empty()
-           $("#myModalLabel").append(Diccionario[llave].titulo+"<h6 style='margin:0px'>Publicado por</h6>")
+           $("#myModalLabel").append(Diccionario[llave].titulo+"<h6 style='margin:0px'>Publicado por "+Diccionario[llave].user+"</h6>")
            $("#contenido").append(Diccionario[llave].descripcion)
            var array = Diccionario[llave].tags;
            $("#contenido").append("<br><br><br>")
@@ -129,17 +134,18 @@
        success:function(data){
          for(var j=0;j<data.BC.length;j++){
            var bcomentario = data.BC[j];
-
+           var user = data.BU[j];
            $(".comentarios").append("<hr>");
-           $(".comentarios").append("<h3>Anonimo dice:</h3>");
+           $(".comentarios").append("<h3>"+user+" dice:</h3>");
            $(".comentarios").append("<p>"+bcomentario+"</p>");
 
          }
          for(var i=0;i<data.C.length;i++){
            var comentario = data.C[i];
+           var user = data.U[i];
            //var fecha = data.dateT[i];
            $(".comentarios").append("<hr>");
-           $(".comentarios").append("<h3>Anonimo dice:</h3>");
+           $(".comentarios").append("<h3>"+user+" dice:</h3>");
            $(".comentarios").append("<p>"+comentario+"</p>");
          }
 

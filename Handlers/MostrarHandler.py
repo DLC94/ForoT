@@ -37,6 +37,7 @@ class MostrarQ(BaseHandler):
         query = db.GqlQuery("SELECT * FROM Usuario WHERE username=:user",user=username)
         k = query.get()
         key = k.key()
+        user = k.username
 
         searchQ = db.GqlQuery("SELECT * FROM Question WHERE usuario=:user order by date Desc",user=key)#Busca todas preguntas
         for i in searchQ:
@@ -50,8 +51,11 @@ class MostrarQ(BaseHandler):
             tags_separados = []
             for j in searchTP:
                 searchT = db.GqlQuery("SELECT * FROM Tag WHERE __key__=:KEY",KEY=j.idTag)
+                searchTD = db.GqlQuery("SELECT * FROM TagD WHERE __key__=:KEY",KEY=j.idTag)
                 for k in searchT:
                     tags_separados.append(k.tag)
+                for l in searchTD:
+                    tags_separados.append(l.tag)
             tags.append(tags_separados)
 
         array = {
@@ -60,7 +64,7 @@ class MostrarQ(BaseHandler):
             'tag':tags,
             'dateT':dateTime,
             'key':llaves,
-            'user': username,
+            'user': user,
             'error':"Ya valiste valedor"
         }
         self.response.out.write(json.dumps(array))

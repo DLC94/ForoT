@@ -49,12 +49,29 @@ class QuestionHandler(BaseHandler):
         q.put()
 
         lista = msj[0].split(',')
+
+        diccionario_de_Tags = []
+        for l in db.GqlQuery("SELECT * FROM Tag"):
+            diccionario_de_Tags.append({l.key:l.tag})
+        for m in db.GqlQuery("SELECT * FROM TagD"):
+            diccionario_de_Tags.append({m.key:m.tag})
+        print diccionario_de_Tags
+
+
         for i in lista:
             if esta_repetido("SELECT * FROM Tag",i):
                 search = db.GqlQuery("SELECT * FROM Tag WHERE tag=:TAG",TAG=i)
                 tagE = search.get()#regresa solo uno
                 key = tagE.key()
                 pt = PTAG(idPregunta=q,idTag=key)
+                pt.put()
+                pt.put()
+            elif esta_repetido("SELECT * FROM TagD",i):
+                bsq = db.GqlQuery("SELECT * FROM TagD WHERE tag=:TAG",TAG=i)
+                tg = bsq.get()
+                print tg.tag
+                k = tg.key()
+                pt = PTAG(idPregunta=q,idTag=k)
                 pt.put()
                 pt.put()
             else:
@@ -69,9 +86,12 @@ class QuestionHandler(BaseHandler):
 
     def put(self):
         search = db.GqlQuery("SELECT * FROM Tag")
+        busqueda = db.GqlQuery("SELECT * FROM TagD")
         tags = []
         for i in search:
             tags.append(i.tag)
+        for j in busqueda:
+            tags.append(j.tag)
         array = {
             'tag':tags,
             'error':'Ya valiste valedor'

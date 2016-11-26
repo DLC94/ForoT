@@ -47,6 +47,6 @@ class Log(BaseHandler):
         }
         self.response.write(self.template.render(template_vars))
         if noExiste == True:
-            self.response.out.write('<div class="container"><div class="col-md-8 text-left"><h5 style="color:red">*Correo Incorrecto.</h5></div></div>')
+            self.response.out.write('<div class="container"><div class="col-md-8 text-left"><h5 style="color:red">*Correo no registrado.</h5></div></div>')
         if incorrecto == True:
             self.response.out.write('<div class="container"><div class="col-md-8 text-left"><h5 style="color:red">*Contrase&ntilde;a incorrecta.</h5></div></div>')

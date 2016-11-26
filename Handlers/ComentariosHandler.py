@@ -27,14 +27,19 @@ class ComenController(BaseHandler):
     def post(self):
         com = self.request.get('cmt',None)
         llave = self.request.get('clave',None)
+        username = self.request.get('user',None)
+        print username
         search = db.GqlQuery("SELECT * FROM Question")
-        for i in search:
+        queryUser = db.GqlQuery("SELECT * FROM Usuario WHERE username=:user",user=username)
+        u = queryUser.get()
+        k = u.key()
 
+        for i in search:
             if str(i.key().id()) == llave:
                 idQ = i.key()
                 print i.question
                 date_now = datetime.datetime.now()
-                c = Comentario(cmt=com,fecha=date_now,pregunta=idQ,correcta = False)
+                c = Comentario(cmt=com,fecha=date_now,pregunta=idQ,correcta = False,user=k)
                 c.put()
                 c.put()
 
@@ -46,9 +51,11 @@ class ComenController(BaseHandler):
         comentarios = []
         llaves = []
         fechas = []
+        usuarios = []
         bestC = []
         bestLL = []
         bestF = []
+        bestU = []
 
         buscaKey = db.GqlQuery("SELECT * FROM Question")
         key = None
@@ -60,15 +67,19 @@ class ComenController(BaseHandler):
             comentarios.append(q.cmt)
             fechas.append(q.fecha)
             llaves.append(q.key().id())
+            usuarios.append(q.user.username)
         for k in db.GqlQuery("SELECT * FROM Comentario WHERE pregunta=:llave AND correcta=True order by fecha",llave=key):
             bestC.append(k.cmt)
             bestF.append(k.fecha)
             bestLL.append(k.key().id())
+            bestU.append(k.user.username)
         array = {
             'C':comentarios,
             'LL':llaves,
+            'U':usuarios,
             'BK':bestLL,
-            'BC':bestC
+            'BC':bestC,
+            'BU':bestU
             #'dateT':fechas
         }
 

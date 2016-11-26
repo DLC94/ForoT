@@ -36,7 +36,16 @@ class TControlle(BaseHandler):
                     description.append(j.description)
                     date = j.date
                     dateTime.append(date.strftime("%Y-%m-%d %H:%M:%S"))
-            print dateTime
+            llave = db.GqlQuery("SELECT __key__ FROM TagD WHERE tag=:t",t=tag)
+            idTD = llave.get()
+            for k in db.GqlQuery("SELECT idPregunta FROM PreguntaTag WHERE idTag=:id",id=idTD):
+                pregunta = db.GqlQuery("SELECT * FROM Question WHERE __key__=:idQuestion",idQuestion=k.idPregunta)
+                for l in pregunta:
+                    question.append(l.question)
+                    description.append(l.description)
+                    date = l.date
+                    dateTime.append(date.strftime("%Y-%m-%d %H:%M:%S"))
+
             tam = len(question)
             for j in range(0,tam):
                 u = {

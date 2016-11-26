@@ -33,6 +33,7 @@
     	</div>
     </div>
     <script>
+      //alert( $.cookie("example"));
     	var Diccionario={};
     	$.ajax({
 	        method:"POST",
@@ -77,14 +78,14 @@
 		              e.preventDefault()
 
 		              $(".comentarios").append("<hr>");
-		              $(".comentarios").append("<h3>Anonimo dice:</h3>");
+		              $(".comentarios").append("<h3>"+Diccionario[llave].user+" dice:</h3>");
 		              $(".comentarios").append("<p>"+msg+"</p>");
                   //hacer que envie primero ajax y si lo hace bien que regrese el id de la pregunta recien ingresada
                   $(".comentarios").append("<button class='btn btn-success'><h6>Marca Como Correcta</h6></button>");
 
 		              $.ajax({
 		                method:"post",
-		                data:{cmt:msg,clave:llave},
+		                data:{cmt:msg,clave:llave,user:Diccionario[llave].user},
 		                url:'/comentarios',
 		                dataType: 'json',
 		                success: function(data){console.log("bien")},
@@ -133,9 +134,9 @@
           success:function(data){
             for(var j=0;j<data.BC.length;j++){
               var bcomentario = data.BC[j];
-
+              var user = data.BU[j];
               $(".comentarios").append("<hr>");
-              $(".comentarios").append("<h3>Anonimo dice:</h3>");
+              $(".comentarios").append("<h3>"+user+" dice:</h3>");
               $(".comentarios").append("<p>"+bcomentario+"</p>");
               //poner click para clase quitar que desmarque como correcta el comentario y sin responder la pregunta
               $(".comentarios").append("<button class='btn btn-danger quitar' id="+data.BK[j]+"><h6>Desmarca Como Correcta</h6></button>");
@@ -144,8 +145,9 @@
             for(var i=0;i<data.C.length;i++){
               var comentario = data.C[i];
               //var fecha = data.dateT[i];
+              var user = data.U[i];
               $(".comentarios").append("<hr>");
-              $(".comentarios").append("<h3>Anonimo dice:</h3>");
+              $(".comentarios").append("<h3>"+user+" dice:</h3>");
               $(".comentarios").append("<p>"+comentario+"</p>");
               $(".comentarios").append("<button class='btn btn-success correcta' id="+data.LL[i]+"><h6>Marca Como Correcta</h6></button>");
             }
